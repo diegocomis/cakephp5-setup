@@ -1,0 +1,85 @@
+
+# - Add PHP (8.1); (same dev server); ✅
+# - Add initial data to MariaDb (10.1.37); ✅
+# - Add o MailHog for mail test; ❌
+# - Create a image for Kubernetes when change server; ❌
+
+# - Access php with: docker exec -it cake-app /bin/bash
+# - Access phpMyAdmin: http://localhost:8080/
+
+version: '3.3'
+
+services:
+    cake-db:
+        image: mariadb:10.1.37
+        container_name: cake-db
+        volumes:
+            - cake_db:/var/lib/mysql
+        restart: always
+        ports:
+            - 3306:3306
+        environment:
+            MYSQL_ROOT_PASSWORD: secret
+            MYSQL_USER: root
+            MYSQL_PASSWORD: secret
+            MYSQL_DATABASE: cakephp_oficina
+        networks:
+            - cakephp-5
+
+    cake-phpmyadmin:
+        depends_on:
+            - cake-db
+        image: phpmyadmin:apache
+        container_name: cake-phpmyadmin
+        restart: always
+        ports:
+            - 8080:80
+        environment:
+            PMA_USER: root
+            PMA_PASSWORD: secret
+            PMA_HOST: cake-db
+            UPLOAD_LIMIT: 256M
+        networks:
+            - cakephp-5
+
+    cake-mailhog:
+        image: mailhog/mailhog
+        container_name: cake-mailhog
+        logging:
+            driver: 'none'
+        ports:
+            - 1025:1025 # smtp server
+            - 8025:8025 # web ui
+        networks:
+            - cakephp-5
+
+    cake-php:
+        depends_on:
+            - cake-db
+            - cake-phpmyadmin
+            - cake-mailhog
+        build:
+            args:
+                user: iffar
+                uid: 1000
+            context: ./
+            dockerfile: Dockerfile
+        image: cake-php
+        container_name: cake-php
+        restart: unless-stopped
+        working_dir: /var/www/html
+        command: bash -c "composer install --no-interaction && echo alias
+          cake="bin/cake" >> ~/.bashrc && source ~/.bashrc && bin/cake server
+          -H 0.0.0.0"
+        volumes:
+            - ./:/var/www/html
+        ports:
+          - 80:80
+          - 8765:8765
+        networks:
+            - cakephp-5
+
+volumes:
+    cake_db: {}
+networks:
+    cakephp-5: null
