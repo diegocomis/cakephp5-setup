@@ -15,7 +15,7 @@ Framework CakePHP montado com ambiente docker
 ## Passo a passo para Configuração inicial
 Clone Repositório
 ```sh
-git clone -b https://github.com/diegocomis/laravel-10-setup.git
+git clone -b https://github.com/diegocomis/cakephp5-setup.git
 ```
 - No Terminal do PHPStorm ou VSCode;
 4. Execute o comando ```docker-compose up``` (esse comando pode levar tempo já que depende da internet e irá gerar o build do PHP na primeira vez);
